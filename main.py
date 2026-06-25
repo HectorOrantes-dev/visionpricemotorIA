@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 
@@ -71,6 +72,18 @@ app = FastAPI(
     description="Microservicio para extracción inteligente de materiales de construcción a partir de audio.",
     version="1.0.0",
     lifespan=lifespan
+)
+
+# ============================================================================
+# CORS - Solo el back-end autorizado puede consumir esta API
+# ============================================================================
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.ALLOWED_ORIGIN],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ============================================================================
