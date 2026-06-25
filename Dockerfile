@@ -7,8 +7,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Actualizar pip y setuptools (necesario para compilar openai-whisper)
-RUN pip install --upgrade pip setuptools wheel
+# Actualizar pip y pinear setuptools<81 (v82+ eliminó pkg_resources que whisper necesita)
+RUN pip install --upgrade pip "setuptools<81" wheel
 
 # Copiar requirements primero para aprovechar la caché de Docker
 COPY requirements.txt .
