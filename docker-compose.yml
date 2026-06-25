@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  # Base de datos PostgreSQL
+  db:
+    image: postgres:16-alpine
+    container_name: visionprice_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: visionprice
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Motor de IA (FastAPI)
+  api:
+    build: .
+    container_name: visionprice_api
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/visionprice
+      WHISPER_MODEL: small
+      BETO_MODEL_PATH: ./modelo_beto_visionprice
+      UPLOAD_DIR: ./uploads
+    volumes:
+      - ./uploads:/app/uploads
+      - ./modelo_beto_visionprice:/app/modelo_beto_visionprice
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

@@ -1,0 +1,37 @@
+# No copiar al contenedor Docker
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.local
+.git/
+.gitignore
+*.md
+
+# Scripts de desarrollo/entrenamiento
+test_pipeline.py
+test_whisper.py
+generate_audio_dataset.py
+generate_dataset.py
+prepare_ner_dataset.py
+train_beto_ner.py
+extractor_nlp.py
+
+# Datos de entrenamiento (no se necesitan en producción)
+dataset_construccion.json
+dataset_construccion.csv
+dataset_ner_beto.json
+resultados_*.json
+audio_dataset/
+
+# Base de datos local
+*.db
+*.sqlite3
+test_visionprice.db
+
+# Uploads (se montan como volumen)
+uploads/
+
+# Resultados de entrenamiento
+resultados_entrenamiento/

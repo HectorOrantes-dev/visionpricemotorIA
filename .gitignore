@@ -1,0 +1,72 @@
+# ============================================
+# VisionPrice - Motor de IA (.gitignore)
+# ============================================
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ---------- Entorno Virtual ----------
+venv/
+.venv/
+env/
+
+# ---------- Variables de Entorno ----------
+.env
+.env.local
+.env.production
+
+# ---------- Modelos de IA (muy pesados para Git) ----------
+modelo_beto_visionprice/
+*.pt
+*.bin
+*.safetensors
+*.onnx
+
+# ---------- Datos y Datasets ----------
+dataset_construccion.json
+dataset_construccion.csv
+dataset_ner_beto.json
+resultados_pruebas_manuales.json
+resultados_dataset_sintetico.json
+audio_dataset/
+
+# ---------- Audios (uploads del usuario) ----------
+uploads/
+
+# ---------- Base de datos local ----------
+*.db
+*.sqlite3
+
+# ---------- Docker ----------
+postgres_data/
+
+# ---------- IDE ----------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+
+# ---------- Logs y temporales ----------
+*.log
+resultados_entrenamiento/
+
+# ---------- Scripts de prueba (no van a producción) ----------
+test_pipeline.py
+test_whisper.py
+generate_audio_dataset.py
+generate_dataset.py
+prepare_ner_dataset.py
+train_beto_ner.py
+extractor_nlp.py
