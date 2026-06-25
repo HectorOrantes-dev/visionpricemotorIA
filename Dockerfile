@@ -7,17 +7,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Actualizar pip y pinear setuptools<81 (v82+ eliminó pkg_resources que whisper necesita)
-RUN pip install --upgrade pip "setuptools<81" wheel
-
-# Copiar requirements primero para aprovechar la caché de Docker
 COPY requirements.txt .
 
-# Instalar openai-whisper primero sin build isolation (necesita pkg_resources)
-RUN pip install --no-cache-dir --no-build-isolation openai-whisper==20240930
-
-# Instalar el resto de dependencias
-RUN pip install --no-cache-dir -r requirements.txt
+# Instalar todo en UNA sola capa para evitar caché de Docker:
+# 1. Forzar setuptools 75 (último con pkg_resources)
+# 2. Instalar whisper sin build isolation
+# 3. Instalar el resto de dependencias
+RUN pip install --upgrade pip && \
+    pip install "setuptools==75.8.2" wheel && \
+    pip install --no-cache-dir --no-build-isolation openai-whisper==20240930 && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copiar el código fuente y el modelo entrenado
 COPY . .
