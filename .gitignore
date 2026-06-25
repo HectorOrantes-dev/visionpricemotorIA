@@ -36,6 +36,7 @@ dataset_ner_beto.json
 resultados_pruebas_manuales.json
 resultados_dataset_sintetico.json
 audio_dataset/
+audios_wav/
 
 # ---------- Audios (uploads del usuario) ----------
 uploads/
