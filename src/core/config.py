@@ -41,6 +41,8 @@ class Settings:
     # URL pública del bucket (dominio R2 o custom). Si se deja vacía, audio_url
     # guardará solo la key del objeto.
     R2_PUBLIC_URL: str = os.getenv("R2_PUBLIC_URL", "")
+    # Prefijo (carpeta) dentro del bucket donde vive el modelo BETO en R2.
+    R2_MODEL_PREFIX: str = os.getenv("R2_MODEL_PREFIX", "models/beto_visionprice")
 
     # Callback hacia el back-end principal (flujo asíncrono)
     ML_CALLBACK_URL: str = os.getenv("ML_CALLBACK_URL", "")  # URL completa, ej: https://backend/api/v1/ml/callback

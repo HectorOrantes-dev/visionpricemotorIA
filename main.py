@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,14 +38,7 @@ async def lifespan(app: FastAPI):
     ExtractionBase.metadata.create_all(bind=engine)
     print("✅ Base de datos PostgreSQL conectada y tablas creadas.")
 
-    # 2. Inicializar Adaptadores de IA
-    whisper_adapter = WhisperAdapter(model_name=settings.WHISPER_MODEL)
-    beto_adapter = BetoAdapter(model_path=settings.BETO_MODEL_PATH)
-
-    # 3. Inicializar Repositorio de PostgreSQL
-    repository = PostgresExtractionRepository(db_url=settings.DATABASE_URL)
-
-    # 4. Inicializar Object Storage (R2) y Notificador de callback
+    # 2. Inicializar Object Storage (R2) y Notificador de callback
     storage = R2StorageAdapter(
         endpoint_url=settings.R2_ENDPOINT_URL,
         access_key_id=settings.R2_ACCESS_KEY_ID,
@@ -56,6 +50,20 @@ async def lifespan(app: FastAPI):
         callback_url=settings.ML_CALLBACK_URL,
         api_key=settings.ML_CALLBACK_API_KEY,
     )
+
+    # 3. Asegurar que el modelo BETO esté disponible localmente.
+    #    Como es muy pesado para git, vive en R2 y se descarga si falta.
+    if not os.path.exists(os.path.join(settings.BETO_MODEL_PATH, "config.json")):
+        print(f"⬇️ Modelo BETO no encontrado en {settings.BETO_MODEL_PATH}; descargando de R2...")
+        n = storage.download_prefix(settings.R2_MODEL_PREFIX, settings.BETO_MODEL_PATH)
+        print(f"✅ Modelo BETO descargado de R2 ({n} archivos).")
+
+    # 4. Inicializar Adaptadores de IA
+    whisper_adapter = WhisperAdapter(model_name=settings.WHISPER_MODEL)
+    beto_adapter = BetoAdapter(model_path=settings.BETO_MODEL_PATH)
+
+    # 5. Inicializar Repositorio de PostgreSQL
+    repository = PostgresExtractionRepository(db_url=settings.DATABASE_URL)
 
     # 5. Construir el Caso de Uso inyectando las dependencias
     use_case = ProcessAudioUseCase(
