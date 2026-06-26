@@ -1,11 +1,11 @@
 import os
 import shutil
+import tempfile
 import uuid
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, BackgroundTasks
 from typing import List
 
 from src.core.config import settings
-from src.feature.extraction.domain.entities import ExtractionRecord
 from src.feature.extraction.application.use_cases import ProcessAudioUseCase
 from src.feature.auth.infraestructure.dependencies.auth_dependency import require_api_key
 
@@ -15,89 +15,98 @@ router = APIRouter(prefix="/extractions", tags=["Extractions"])
 _use_case: ProcessAudioUseCase = None
 _repository = None
 
+ALLOWED_EXTENSIONS = [".wav", ".m4a", ".mp3", ".ogg"]
+
+
 def init_controller(use_case: ProcessAudioUseCase, repository):
     """Se llama desde main.py para inyectar las dependencias ya construidas"""
     global _use_case, _repository
     _use_case = use_case
     _repository = repository
 
-@router.post("/", response_model=dict, status_code=201)
+
+@router.post("/", response_model=dict, status_code=202)
 async def extract_from_audio(
-    user_hash: str = Form(..., description="Hash único del usuario"),
-    audio: UploadFile = File(..., description="Archivo de audio (.wav, .m4a)"),
+    background_tasks: BackgroundTasks,
+    grabacion_id: str = Form(..., description="ID de la grabación en el back-end principal"),
+    proyecto_id: str = Form(..., description="ID del proyecto al que pertenece la grabación"),
+    audio: UploadFile = File(..., description="Archivo de audio (.wav, .m4a, .mp3, .ogg)"),
     _api_key: str = Depends(require_api_key)  # 🔒 Protegido con API Key
 ):
     """
-    Recibe un archivo de audio y el user_hash del usuario.
-    
+    Recibe un audio y lo procesa de forma ASÍNCRONA.
+
     REQUIERE el header X-Api-Key para autenticarse.
-    Tu API principal envía este header automáticamente.
-    
-    1. Guarda el audio en /uploads/
-    2. Lo transcribe con Whisper
-    3. Extrae entidades con BETO
-    4. Guarda todo en PostgreSQL asociado al user_hash
-    5. Devuelve el JSON con los materiales extraídos
+
+    Flujo:
+    1. Valida y guarda el audio en un archivo temporal.
+    2. Encola el procesamiento en segundo plano y responde 202 de inmediato.
+    3. En background: sube el audio a R2, transcribe (Whisper), extrae (BETO),
+       guarda en PostgreSQL y notifica el resultado vía POST al callback.
     """
     if _use_case is None:
         raise HTTPException(status_code=500, detail="El motor de IA no está inicializado")
 
     # Validar extensión
-    allowed_extensions = [".wav", ".m4a", ".mp3", ".ogg"]
     file_ext = os.path.splitext(audio.filename)[1].lower()
-    if file_ext not in allowed_extensions:
-        raise HTTPException(status_code=400, detail=f"Formato no soportado: {file_ext}. Usa: {allowed_extensions}")
+    if file_ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Formato no soportado: {file_ext}. Usa: {ALLOWED_EXTENSIONS}"
+        )
 
-    # Guardar audio en disco local (MVP) - En producción sería S3/R2
-    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-    unique_filename = f"{user_hash}_{uuid.uuid4().hex[:8]}{file_ext}"
-    audio_path = os.path.join(settings.UPLOAD_DIR, unique_filename)
-    
-    with open(audio_path, "wb") as buffer:
-        shutil.copyfileobj(audio.file, buffer)
-
+    # Guardar el audio en un archivo temporal. Debe persistir más allá de esta
+    # petición (lo consume la tarea de fondo), por eso usamos un temp con nombre
+    # único en lugar del stream de UploadFile (que se cierra al responder).
+    tmp_fd, tmp_path = tempfile.mkstemp(prefix=f"{grabacion_id}_{uuid.uuid4().hex[:8]}_", suffix=file_ext)
     try:
-        # Ejecutar el caso de uso principal
-        record = _use_case.execute(user_hash=user_hash, audio_path=audio_path)
-
-        return {
-            "status": "success",
-            "data": {
-                "id": record.id,
-                "user_hash": record.user_hash,
-                "audio_url": f"/uploads/{unique_filename}",
-                "transcription": record.transcription,
-                "extracted_data": record.extracted_data.model_dump(),
-                "created_at": record.created_at.isoformat()
-            }
-        }
+        with os.fdopen(tmp_fd, "wb") as buffer:
+            shutil.copyfileobj(audio.file, buffer)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error procesando audio: {str(e)}")
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        raise HTTPException(status_code=500, detail=f"Error guardando el audio: {str(e)}")
 
-@router.get("/user/{user_hash}", response_model=dict)
-async def get_user_extractions(
-    user_hash: str,
+    # Encolar el procesamiento pesado en segundo plano
+    background_tasks.add_task(
+        _use_case.execute,
+        grabacion_id=grabacion_id,
+        proyecto_id=proyecto_id,
+        audio_path=tmp_path,
+        file_ext=file_ext,
+    )
+
+    return {
+        "status": "accepted",
+        "grabacion_id": grabacion_id,
+        "proyecto_id": proyecto_id,
+        "message": "Audio recibido. El resultado se notificará por callback al terminar.",
+    }
+
+
+@router.get("/proyecto/{proyecto_id}", response_model=dict)
+async def get_proyecto_extractions(
+    proyecto_id: str,
     _api_key: str = Depends(require_api_key)  # 🔒 Protegido con API Key
 ):
     """
-    Devuelve el historial de todas las extracciones de un usuario.
-    Así tu app Flutter puede mostrar los 5 (o N) audios que le pertenecen 
-    al usuario y verificar que estén bien.
-    
+    Devuelve el historial de todas las extracciones de un proyecto.
+
     REQUIERE el header X-Api-Key para autenticarse.
     """
     if _repository is None:
         raise HTTPException(status_code=500, detail="Repositorio no inicializado")
 
-    records = _repository.get_by_user_hash(user_hash)
-    
+    records = _repository.get_by_proyecto_id(proyecto_id)
+
     return {
         "status": "success",
-        "user_hash": user_hash,
+        "proyecto_id": proyecto_id,
         "total": len(records),
         "extractions": [
             {
                 "id": r.id,
+                "grabacion_id": r.grabacion_id,
                 "audio_url": r.audio_url,
                 "transcription": r.transcription,
                 "extracted_data": r.extracted_data.model_dump(),

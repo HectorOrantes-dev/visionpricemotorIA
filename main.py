@@ -1,8 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-import os
 
 from src.core.config import settings
 from src.core.database import engine
@@ -10,6 +8,8 @@ from src.core.database import engine
 # Adaptadores (Infraestructura)
 from src.feature.extraction.infrastructure.adapters.whisper_adapter import WhisperAdapter
 from src.feature.extraction.infrastructure.adapters.beto_adapter import BetoAdapter
+from src.feature.extraction.infrastructure.adapters.r2_storage_adapter import R2StorageAdapter
+from src.feature.extraction.infrastructure.adapters.callback_adapter import HttpCallbackAdapter
 from src.feature.extraction.infrastructure.repositories.postgres_extraction_repository import (
     PostgresExtractionRepository,
     Base as ExtractionBase
@@ -44,18 +44,30 @@ async def lifespan(app: FastAPI):
     # 3. Inicializar Repositorio de PostgreSQL
     repository = PostgresExtractionRepository(db_url=settings.DATABASE_URL)
 
-    # 4. Construir el Caso de Uso inyectando las dependencias
+    # 4. Inicializar Object Storage (R2) y Notificador de callback
+    storage = R2StorageAdapter(
+        endpoint_url=settings.R2_ENDPOINT_URL,
+        access_key_id=settings.R2_ACCESS_KEY_ID,
+        secret_access_key=settings.R2_SECRET_ACCESS_KEY,
+        bucket=settings.R2_BUCKET,
+        public_url=settings.R2_PUBLIC_URL,
+    )
+    notifier = HttpCallbackAdapter(
+        callback_url=settings.ML_CALLBACK_URL,
+        api_key=settings.ML_CALLBACK_API_KEY,
+    )
+
+    # 5. Construir el Caso de Uso inyectando las dependencias
     use_case = ProcessAudioUseCase(
         transcriber=whisper_adapter,
         extractor=beto_adapter,
-        repository=repository
+        repository=repository,
+        storage=storage,
+        notifier=notifier,
     )
 
-    # 5. Inyectar el caso de uso en el controlador
+    # 6. Inyectar el caso de uso en el controlador
     extraction_controller.init_controller(use_case=use_case, repository=repository)
-
-    # 6. Crear carpeta de uploads si no existe
-    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 
     print("✅ Motor de IA listo para recibir solicitudes.")
     
@@ -91,10 +103,6 @@ app.add_middleware(
 # ============================================================================
 
 app.include_router(extraction_controller.router, prefix=settings.API_PREFIX)
-
-# Servir archivos de audio estáticamente para que el usuario pueda reproducirlos
-os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
 # ============================================================================
 # Endpoint de Salud

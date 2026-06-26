@@ -13,7 +13,8 @@ class ExtractionModel(Base):
     __tablename__ = 'extractions'
 
     id = Column(String, primary_key=True)
-    user_hash = Column(String, index=True, nullable=False)
+    grabacion_id = Column(String, index=True, nullable=False)
+    proyecto_id = Column(String, index=True, nullable=False)
     audio_url = Column(String, nullable=False)
     transcription = Column(String, nullable=False)
     extracted_data = Column(JSONB, nullable=False)
@@ -29,7 +30,8 @@ class PostgresExtractionRepository(IExtractionRepository):
         with self.Session() as session:
             db_model = ExtractionModel(
                 id=record.id,
-                user_hash=record.user_hash,
+                grabacion_id=record.grabacion_id,
+                proyecto_id=record.proyecto_id,
                 audio_url=record.audio_url,
                 transcription=record.transcription,
                 extracted_data=record.extracted_data.model_dump(),
@@ -39,14 +41,15 @@ class PostgresExtractionRepository(IExtractionRepository):
             session.commit()
             return record
 
-    def get_by_user_hash(self, user_hash: str) -> List[ExtractionRecord]:
+    def get_by_proyecto_id(self, proyecto_id: str) -> List[ExtractionRecord]:
         with self.Session() as session:
-            db_models = session.query(ExtractionModel).filter(ExtractionModel.user_hash == user_hash).all()
-            
+            db_models = session.query(ExtractionModel).filter(ExtractionModel.proyecto_id == proyecto_id).all()
+
             return [
                 ExtractionRecord(
                     id=model.id,
-                    user_hash=model.user_hash,
+                    grabacion_id=model.grabacion_id,
+                    proyecto_id=model.proyecto_id,
                     audio_url=model.audio_url,
                     transcription=model.transcription,
                     extracted_data=ExtractionResult(**model.extracted_data),

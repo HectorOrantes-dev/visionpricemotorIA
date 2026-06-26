@@ -11,17 +11,19 @@ class ExtractionResult(BaseModel):
 
 class ExtractionRecord(BaseModel):
     id: str
-    user_hash: str
+    grabacion_id: str
+    proyecto_id: str
     audio_url: str
     transcription: str
     extracted_data: ExtractionResult
     created_at: datetime
 
     @classmethod
-    def create(cls, user_hash: str, audio_url: str, transcription: str, extracted_data: ExtractionResult) -> 'ExtractionRecord':
+    def create(cls, grabacion_id: str, proyecto_id: str, audio_url: str, transcription: str, extracted_data: ExtractionResult) -> 'ExtractionRecord':
         return cls(
             id=str(uuid.uuid4()),
-            user_hash=user_hash,
+            grabacion_id=grabacion_id,
+            proyecto_id=proyecto_id,
             audio_url=audio_url,
             transcription=transcription,
             extracted_data=extracted_data,

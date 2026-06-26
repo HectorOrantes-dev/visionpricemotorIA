@@ -21,6 +21,20 @@ class IExtractionRepository(ABC):
         pass
 
     @abstractmethod
-    def get_by_user_hash(self, user_hash: str) -> List[ExtractionRecord]:
-        """Obtiene todas las extracciones asociadas a un usuario"""
+    def get_by_proyecto_id(self, proyecto_id: str) -> List[ExtractionRecord]:
+        """Obtiene todas las extracciones asociadas a un proyecto"""
+        pass
+
+
+class IObjectStorage(ABC):
+    @abstractmethod
+    def upload(self, local_path: str, object_key: str) -> str:
+        """Sube un archivo al object storage y devuelve la URL pública (o la key)"""
+        pass
+
+
+class IMlCallbackNotifier(ABC):
+    @abstractmethod
+    def notify(self, payload: dict) -> None:
+        """Notifica al back-end principal el resultado del procesamiento (POST con X-Api-Key)"""
         pass
