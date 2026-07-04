@@ -7,6 +7,7 @@ from src.feature.extraction.domain.repositories import (
     IExtractionRepository,
     IObjectStorage,
     IMlCallbackNotifier,
+    ITextCorrector,
 )
 
 
@@ -18,12 +19,14 @@ class ProcessAudioUseCase:
         repository: IExtractionRepository,
         storage: IObjectStorage,
         notifier: IMlCallbackNotifier,
+        corrector: ITextCorrector,
     ):
         self.transcriber = transcriber
         self.extractor = extractor
         self.repository = repository
         self.storage = storage
         self.notifier = notifier
+        self.corrector = corrector
 
     def execute(self, grabacion_id: str, proyecto_id: str, audio_path: str, file_ext: str) -> None:
         """
@@ -44,7 +47,12 @@ class ProcessAudioUseCase:
             audio_url = self.storage.upload(audio_path, object_key)
 
             # 2. Transcripción (Whisper) - usa el archivo temporal local
-            transcription_text = self.transcriber.transcribe(audio_path)
+            raw_text = self.transcriber.transcribe(audio_path)
+
+            # 2b. Corrección de errores de transcripción contra el vocabulario de dominio
+            transcription_text = self.corrector.correct(raw_text)
+            if transcription_text != raw_text:
+                print(f"✏️ Texto corregido:\n   antes: {raw_text}\n   después: {transcription_text}")
 
             # 3. Extracción (BETO)
             extracted_data = self.extractor.extract_entities(transcription_text)

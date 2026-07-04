@@ -11,6 +11,7 @@ from src.feature.extraction.infrastructure.adapters.whisper_adapter import Whisp
 from src.feature.extraction.infrastructure.adapters.beto_adapter import BetoAdapter
 from src.feature.extraction.infrastructure.adapters.r2_storage_adapter import R2StorageAdapter
 from src.feature.extraction.infrastructure.adapters.callback_adapter import HttpCallbackAdapter
+from src.feature.extraction.infrastructure.adapters.text_corrector_adapter import RapidFuzzCorrector
 from src.feature.extraction.infrastructure.repositories.postgres_extraction_repository import (
     PostgresExtractionRepository,
     Base as ExtractionBase
@@ -61,17 +62,19 @@ async def lifespan(app: FastAPI):
     # 4. Inicializar Adaptadores de IA
     whisper_adapter = WhisperAdapter(model_name=settings.WHISPER_MODEL)
     beto_adapter = BetoAdapter(model_path=settings.BETO_MODEL_PATH)
+    corrector = RapidFuzzCorrector(vocab_path=settings.VOCAB_PATH)
 
     # 5. Inicializar Repositorio de PostgreSQL
     repository = PostgresExtractionRepository(db_url=settings.DATABASE_URL)
 
-    # 5. Construir el Caso de Uso inyectando las dependencias
+    # 6. Construir el Caso de Uso inyectando las dependencias
     use_case = ProcessAudioUseCase(
         transcriber=whisper_adapter,
         extractor=beto_adapter,
         repository=repository,
         storage=storage,
         notifier=notifier,
+        corrector=corrector,
     )
 
     # 6. Inyectar el caso de uso en el controlador

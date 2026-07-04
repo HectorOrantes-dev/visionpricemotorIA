@@ -14,6 +14,13 @@ class IEntityExtractor(ABC):
         """Toma el texto de Whisper y usa BETO para extraer el JSON de materiales"""
         pass
 
+
+class ITextCorrector(ABC):
+    @abstractmethod
+    def correct(self, text: str) -> str:
+        """Corrige errores de transcripción contra el vocabulario de dominio"""
+        pass
+
 class IExtractionRepository(ABC):
     @abstractmethod
     def save(self, record: ExtractionRecord) -> ExtractionRecord:

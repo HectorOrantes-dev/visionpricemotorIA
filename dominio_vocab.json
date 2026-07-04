@@ -1,0 +1,25 @@
+{
+  "_comment": "Vocabulario de dominio para corregir errores de transcripción de Whisper. Amplía estas listas conforme detectes nuevos términos. 'protegidas' son palabras comunes que NUNCA se deben corregir (evita falsos positivos).",
+  "superficies": [
+    "pared", "paredes", "muro", "muros", "piso", "pisos", "techo", "techos",
+    "suelo", "fachada", "plafón", "loza", "contrapiso"
+  ],
+  "materiales": [
+    "azulejo", "azulejos", "porcelanato", "loseta", "losetas", "zoclo", "zoclos",
+    "pegazulejo", "cerámico", "cerámica", "cemento", "mortero", "crucetas",
+    "boquilla", "yeso", "tabique", "block", "grava", "arena", "adhesivo",
+    "impermeabilizante", "pintura", "sellador"
+  ],
+  "colores": [
+    "negro", "blanco", "gris", "beige", "café", "hueso", "arena", "rojo",
+    "azul", "verde", "amarillo", "terracota", "marfil", "crema"
+  ],
+  "protegidas": [
+    "quiero", "tengo", "una", "uno", "unos", "unas", "enfrente", "metros",
+    "metro", "por", "para", "prueba", "audio", "necesito", "medidas", "son",
+    "este", "esta", "esto", "color", "colores", "cuadrados", "cuadrado",
+    "que", "los", "las", "del", "con", "más", "menos", "poner", "quitar",
+    "también", "como", "muy", "está", "hay", "voy", "sería", "ocupo",
+    "solo", "sola", "solos", "solas", "sólo", "solamente"
+  ]
+}

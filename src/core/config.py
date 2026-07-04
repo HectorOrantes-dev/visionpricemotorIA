@@ -20,6 +20,8 @@ class Settings:
     # Modelos de IA
     WHISPER_MODEL: str = os.getenv("WHISPER_MODEL", "small")
     BETO_MODEL_PATH: str = os.getenv("BETO_MODEL_PATH", "./modelo_beto_visionprice")
+    # Vocabulario de dominio para el corrector de transcripción (Fase 1)
+    VOCAB_PATH: str = os.getenv("VOCAB_PATH", "./dominio_vocab.json")
     
     # Almacenamiento de audios
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "./uploads")
