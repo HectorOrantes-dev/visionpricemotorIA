@@ -20,16 +20,19 @@ class BetoAdapter(IEntityExtractor):
 
         resultados = self.nlp(text)
         
-        extracted = ExtractionResult(materiales=[], dimensiones_crudo=[])
-        
+        extracted = ExtractionResult(materiales=[], colores=[], dimensiones_crudo=[])
+
         for entidad in resultados:
             grupo = entidad['entity_group']
             palabra = entidad['word']
-            
+
             if grupo == 'UBICACION':
                 extracted.ubicacion = palabra
             elif grupo == 'SUPERFICIE':
                 extracted.tipo_superficie = palabra
+            elif grupo == 'COLOR':
+                if palabra not in extracted.colores:
+                    extracted.colores.append(palabra)
             elif grupo == 'MATERIAL':
                 # Normalización
                 if "pega su lejo" in palabra.lower(): palabra = "pegazulejo"

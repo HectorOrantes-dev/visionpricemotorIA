@@ -8,6 +8,7 @@ from src.feature.extraction.domain.repositories import (
     IObjectStorage,
     IMlCallbackNotifier,
     ITextCorrector,
+    IDimensionExtractor,
 )
 
 
@@ -20,6 +21,7 @@ class ProcessAudioUseCase:
         storage: IObjectStorage,
         notifier: IMlCallbackNotifier,
         corrector: ITextCorrector,
+        dimension_extractor: IDimensionExtractor,
     ):
         self.transcriber = transcriber
         self.extractor = extractor
@@ -27,6 +29,7 @@ class ProcessAudioUseCase:
         self.storage = storage
         self.notifier = notifier
         self.corrector = corrector
+        self.dimension_extractor = dimension_extractor
 
     def execute(self, grabacion_id: str, proyecto_id: str, audio_path: str, file_ext: str) -> None:
         """
@@ -54,8 +57,13 @@ class ProcessAudioUseCase:
             if transcription_text != raw_text:
                 print(f"✏️ Texto corregido:\n   antes: {raw_text}\n   después: {transcription_text}")
 
-            # 3. Extracción (BETO)
+            # 3. Extracción de entidades (BETO): material, color, ubicación, superficie
             extracted_data = self.extractor.extract_entities(transcription_text)
+
+            # 3b. Extracción de dimensiones (regex): área, largo/ancho, tamaño de pieza
+            dimensiones, dim_crudo = self.dimension_extractor.extract(transcription_text)
+            extracted_data.dimensiones = dimensiones
+            extracted_data.dimensiones_crudo = dim_crudo
 
             # 4. Guardado en PostgreSQL
             record = ExtractionRecord.create(

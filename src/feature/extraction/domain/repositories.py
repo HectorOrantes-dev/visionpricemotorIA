@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
-from src.feature.extraction.domain.entities import ExtractionRecord, ExtractionResult
+from typing import List, Optional, Tuple
+from src.feature.extraction.domain.entities import ExtractionRecord, ExtractionResult, Dimensiones
 
 class IAudioTranscriber(ABC):
     @abstractmethod
@@ -19,6 +19,13 @@ class ITextCorrector(ABC):
     @abstractmethod
     def correct(self, text: str) -> str:
         """Corrige errores de transcripción contra el vocabulario de dominio"""
+        pass
+
+
+class IDimensionExtractor(ABC):
+    @abstractmethod
+    def extract(self, text: str) -> Tuple[Dimensiones, List[str]]:
+        """Extrae medidas normalizadas del texto. Devuelve (Dimensiones, crudo)."""
         pass
 
 class IExtractionRepository(ABC):
