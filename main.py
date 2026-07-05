@@ -78,6 +78,7 @@ async def lifespan(app: FastAPI):
         notifier=notifier,
         corrector=corrector,
         dimension_extractor=dimension_parser,
+        voice_model_label=f"whisper-{settings.WHISPER_MODEL}",
     )
 
     # 6. Inyectar el caso de uso en el controlador

@@ -1,6 +1,6 @@
 import os
 
-from src.feature.extraction.domain.entities import ExtractionRecord
+from src.feature.extraction.domain.entities import ExtractionRecord, ExtractionResult
 from src.feature.extraction.domain.repositories import (
     IAudioTranscriber,
     IEntityExtractor,
@@ -22,6 +22,8 @@ class ProcessAudioUseCase:
         notifier: IMlCallbackNotifier,
         corrector: ITextCorrector,
         dimension_extractor: IDimensionExtractor,
+        voice_model_label: str = "whisper-small",
+        extraction_model_version: str = "beto-visionprice-1.1",
     ):
         self.transcriber = transcriber
         self.extractor = extractor
@@ -30,76 +32,85 @@ class ProcessAudioUseCase:
         self.notifier = notifier
         self.corrector = corrector
         self.dimension_extractor = dimension_extractor
+        self.voice_model_label = voice_model_label
+        self.extraction_model_version = extraction_model_version
 
     def execute(self, grabacion_id: str, proyecto_id: str, audio_path: str, file_ext: str) -> None:
         """
-        Flujo asíncrono del motor de IA (corre en background):
-        1. Sube el audio al object storage (R2).
-        2. Transcribe el audio con Whisper.
-        3. Extrae las entidades con BETO.
-        4. Guarda el resultado en PostgreSQL.
-        5. Notifica al back-end principal vía callback (POST con X-Api-Key).
-
-        Cualquier error se reporta también por callback con status="failed".
-        Nunca relanza: es una tarea de fondo y no hay nadie esperando la respuesta.
+        Flujo asíncrono (background):
+        1. Sube el audio a R2 y transcribe (Whisper) + corrige el texto.
+        2. Extrae entidades (BETO) y dimensiones (regex) -> best effort.
+        3. Guarda en PostgreSQL -> best effort.
+        4. Notifica al back-end vía callback con el contrato acordado.
+        Nunca relanza: es tarea de fondo.
         """
-        audio_url = ""
+        object_key = f"grabaciones/{proyecto_id}/{grabacion_id}{file_ext}"
+        texto = None
+
+        # --- Paso obligatorio: audio + transcripción. Sin 'texto' no hay callback válido. ---
         try:
-            # 1. Subir el audio a R2
-            object_key = f"grabaciones/{proyecto_id}/{grabacion_id}{file_ext}"
-            audio_url = self.storage.upload(audio_path, object_key)
-
-            # 2. Transcripción (Whisper) - usa el archivo temporal local
+            self.storage.upload(audio_path, object_key)
             raw_text = self.transcriber.transcribe(audio_path)
+            texto = self.corrector.correct(raw_text)
+            if texto != raw_text:
+                print(f"✏️ Texto corregido:\n   antes: {raw_text}\n   después: {texto}")
+        except Exception as e:
+            print(f"❌ Error en audio/transcripción de grabacion {grabacion_id}: {e}")
+            self._cleanup(audio_path)
+            # El back-end exige 'texto'; sin transcripción no hay callback útil.
+            return
 
-            # 2b. Corrección de errores de transcripción contra el vocabulario de dominio
-            transcription_text = self.corrector.correct(raw_text)
-            if transcription_text != raw_text:
-                print(f"✏️ Texto corregido:\n   antes: {raw_text}\n   después: {transcription_text}")
+        # --- Extracción (best effort): si falla, mandamos solo la transcripción. ---
+        extracted = ExtractionResult()
+        parametros_json = None
+        try:
+            extracted = self.extractor.extract_entities(texto)
+            dimensiones, dim_crudo = self.dimension_extractor.extract(texto)
+            extracted.dimensiones = dimensiones
+            extracted.dimensiones_crudo = dim_crudo
+            parametros_json = extracted.model_dump()
+        except Exception as e:
+            print(f"⚠️ Extracción (BETO/dimensiones) falló para grabacion {grabacion_id}: {e}. "
+                  f"Se enviará solo la transcripción.")
 
-            # 3. Extracción de entidades (BETO): material, color, ubicación, superficie
-            extracted_data = self.extractor.extract_entities(transcription_text)
-
-            # 3b. Extracción de dimensiones (regex): área, largo/ancho, tamaño de pieza
-            dimensiones, dim_crudo = self.dimension_extractor.extract(transcription_text)
-            extracted_data.dimensiones = dimensiones
-            extracted_data.dimensiones_crudo = dim_crudo
-
-            # 4. Guardado en PostgreSQL
+        # --- Guardado en BD (best effort). ---
+        try:
             record = ExtractionRecord.create(
                 grabacion_id=grabacion_id,
                 proyecto_id=proyecto_id,
-                audio_url=audio_url,
-                transcription=transcription_text,
-                extracted_data=extracted_data,
+                audio_url=object_key,
+                transcription=texto,
+                extracted_data=extracted,
             )
             self.repository.save(record)
-
-            # 5. Callback de éxito
-            self.notifier.notify({
-                "grabacion_id": grabacion_id,
-                "proyecto_id": proyecto_id,
-                "status": "completed",
-                "audio_url": audio_url,
-                "transcription": transcription_text,
-                "extracted_data": extracted_data.model_dump(),
-                "error": None,
-            })
         except Exception as e:
-            print(f"❌ Error procesando grabacion {grabacion_id}: {e}")
-            self.notifier.notify({
-                "grabacion_id": grabacion_id,
-                "proyecto_id": proyecto_id,
-                "status": "failed",
-                "audio_url": audio_url,
-                "transcription": None,
-                "extracted_data": None,
-                "error": str(e),
-            })
-        finally:
-            # Limpiar el archivo temporal local
-            if os.path.exists(audio_path):
-                try:
-                    os.remove(audio_path)
-                except OSError:
-                    pass
+            print(f"⚠️ No se pudo guardar en BD la grabacion {grabacion_id}: {e}")
+
+        # --- Callback al back-end principal (contrato acordado). ---
+        payload = {
+            "grabacion_id": self._to_int(grabacion_id),
+            "texto": texto,
+            "object_storage_key": object_key,
+            "modelo_voice_to_text": self.voice_model_label,
+            "version_modelo": self.extraction_model_version,
+        }
+        if parametros_json is not None:
+            payload["parametros_json"] = parametros_json
+        self.notifier.notify(payload)
+
+        self._cleanup(audio_path)
+
+    @staticmethod
+    def _to_int(value):
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return value
+
+    @staticmethod
+    def _cleanup(audio_path: str) -> None:
+        if os.path.exists(audio_path):
+            try:
+                os.remove(audio_path)
+            except OSError:
+                pass
