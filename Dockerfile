@@ -7,6 +7,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+# Logs sin buffer: que los print() se vean en tiempo real en Railway.
+ENV PYTHONUNBUFFERED=1
+
 COPY requirements.txt .
 
 # Instalar todo en UNA sola capa para evitar caché de Docker:
