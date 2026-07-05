@@ -19,7 +19,9 @@ PIEZA_KW_FUERTE = ("mide", "miden", "pieza", "piezas", "tamaño", "tamano",
 
 RE_AREA = re.compile(NUM + r"\s*(?:metros?|mts?|m)\s*(?:cuadrados?|²|2\b)")
 RE_LADO = re.compile(NUM + r"\s*(?:metros?|mts?|m)?\s*de\s*(largo|ancho|alto)")
-RE_PAR = re.compile(NUM + r"\s*(?:por|x|×)\s*" + NUM)
+# Tolera unidad ("metros") y coma/punto entre el número y el conector.
+# Ej: "2 metros, por 2 metros", "2 m x 2 m", "4 metros por 5 metros".
+RE_PAR = re.compile(NUM + r"\s*(?:metros?|mts?|m)?\s*[,.]?\s*(?:x|×|por|\*)\s*" + NUM)
 
 
 def _num(s: str) -> float:
