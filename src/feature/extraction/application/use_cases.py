@@ -50,10 +50,12 @@ class ProcessAudioUseCase:
         # --- Paso obligatorio: audio + transcripción. Sin 'texto' no hay callback válido. ---
         try:
             self.storage.upload(audio_path, object_key)
+            print(f"☁️ Audio subido a R2: {object_key}")
             raw_text = self.transcriber.transcribe(audio_path)
             texto = self.corrector.correct(raw_text)
             if texto != raw_text:
                 print(f"✏️ Texto corregido:\n   antes: {raw_text}\n   después: {texto}")
+            print(f"📝 Transcripción final (grabacion {grabacion_id}): {texto}")
         except Exception as e:
             print(f"❌ Error en audio/transcripción de grabacion {grabacion_id}: {e}")
             self._cleanup(audio_path)
@@ -96,6 +98,7 @@ class ProcessAudioUseCase:
         }
         if parametros_json is not None:
             payload["parametros_json"] = parametros_json
+        print(f"📤 Enviando callback de grabacion {grabacion_id} al back-end...")
         self.notifier.notify(payload)
 
         self._cleanup(audio_path)
