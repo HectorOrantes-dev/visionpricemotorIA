@@ -11,7 +11,7 @@ DOMAIN_PROMPT = (
 )
 
 class WhisperAdapter(IAudioTranscriber):
-    def __init__(self, model_name="small"):
+    def __init__(self, model_name="base"):
         print(f"Cargando modelo Whisper ({model_name})...")
         self.model = whisper.load_model(model_name)
         print("✅ Whisper cargado exitosamente.")
