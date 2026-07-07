@@ -13,9 +13,14 @@ PALABRAS_NUM = {
 NUM = (r"(\d+(?:[.,]\d+)?|un[oa]?|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|"
        r"diez|once|doce|quince|veinte)")
 
-# Señales fuertes de que un "N por M" describe el tamaño de la PIEZA, no del área.
-PIEZA_KW_FUERTE = ("mide", "miden", "pieza", "piezas", "tamaño", "tamano",
-                   "medida", "medidas")
+# Un "N por M" es tamaño de PIEZA si cerca hay un sustantivo de pieza (loseta,
+# azulejo...) y NO uno de superficie. "la loseta mide 1x1" = pieza; pero
+# "la pared mide 2x2" = área de la superficie, no pieza.
+PIEZA_NOUNS = ("loseta", "losetas", "azulejo", "azulejos", "baldosa", "baldosas",
+               "pieza", "piezas", "mosaico", "mosaicos", "tableta", "porcelanato",
+               "cerámico", "ceramico", "talavera")
+SURFACE_NOUNS = ("pared", "paredes", "muro", "muros", "piso", "pisos", "techo",
+                 "suelo", "fachada", "plafón", "plafon")
 
 RE_AREA = re.compile(NUM + r"\s*(?:metros?|mts?|m)\s*(?:cuadrados?|²|2\b)")
 RE_LADO = re.compile(NUM + r"\s*(?:metros?|mts?|m)?\s*de\s*(largo|ancho|alto)")
@@ -58,11 +63,13 @@ class RegexDimensionParser(IDimensionExtractor):
         # 3. Pares "N por M" / "N x M" → pieza o área según contexto y tamaño
         for m in RE_PAR.finditer(t):
             a, b = _num(m.group(1)), _num(m.group(2))
-            ctx = t[max(0, m.start() - 25):m.start()]
-            es_fuerte = any(k in ctx for k in PIEZA_KW_FUERTE)
-            # Piezas típicas son pequeñas (<=1.2 m) y hay un área mayor ya detectada.
+            ctx = t[max(0, m.start() - 30):m.start()]
+            has_piece = any(n in ctx for n in PIEZA_NOUNS)
+            has_surface = any(n in ctx for n in SURFACE_NOUNS)
+            # Es pieza si el contexto habla de una pieza (y no de una superficie),
+            # o como respaldo si los números son chicos (<=1.2 m) con un área mayor.
             es_chico = a <= 1.2 and b <= 1.2 and dim.area_m2 is not None and dim.area_m2 > a * b
-            if es_fuerte or es_chico:
+            if (has_piece and not has_surface) or es_chico:
                 dim.pieza_largo_m, dim.pieza_ancho_m = a, b
             else:
                 if dim.largo_m is None:

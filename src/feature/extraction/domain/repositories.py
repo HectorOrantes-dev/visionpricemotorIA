@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple
-from src.feature.extraction.domain.entities import ExtractionRecord, ExtractionResult, Dimensiones
+from src.feature.extraction.domain.entities import ExtractionRecord, ExtractionResult, ExtractionItem, Dimensiones
 
 class IAudioTranscriber(ABC):
     @abstractmethod
@@ -10,8 +10,8 @@ class IAudioTranscriber(ABC):
 
 class IEntityExtractor(ABC):
     @abstractmethod
-    def extract_entities(self, text: str) -> ExtractionResult:
-        """Toma el texto de Whisper y usa BETO para extraer el JSON de materiales"""
+    def extract_entities(self, text: str) -> ExtractionItem:
+        """Usa BETO para extraer superficie, materiales, colores y ubicación de un texto"""
         pass
 
 

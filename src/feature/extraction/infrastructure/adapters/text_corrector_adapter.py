@@ -7,6 +7,17 @@ from rapidfuzz import process, fuzz
 from src.feature.extraction.domain.repositories import ITextCorrector
 
 
+# Errores de transcripción conocidos que el fuzzy no alcanza (ej. confusión p/f
+# de Whisper, que no es un patrón fonético estándar del español).
+ERRORES_ASR = {
+    "faredes": "paredes",
+    "fared": "pared",
+    "farede": "pared",
+    "vaño": "baño",
+    "vater": "baño",
+}
+
+
 def _strip_accents(s: str) -> str:
     return "".join(c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn")
 
@@ -75,6 +86,10 @@ class RapidFuzzCorrector(ITextCorrector):
                 out.append(tok)
                 continue
             word = tok.lower()
+            # 1) Errores de ASR conocidos (máxima prioridad)
+            if word in ERRORES_ASR:
+                out.append(self._preserve_case(tok, ERRORES_ASR[word]))
+                continue
             if len(word) < 3 or word in self.protected:
                 out.append(tok)
                 continue

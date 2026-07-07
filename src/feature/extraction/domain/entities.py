@@ -13,13 +13,19 @@ class Dimensiones(BaseModel):
     pieza_largo_m: Optional[float] = None  # tamaño de la pieza (ej. loseta 1x1)
     pieza_ancho_m: Optional[float] = None
 
-class ExtractionResult(BaseModel):
+class ExtractionItem(BaseModel):
+    """Una superficie del presupuesto (una pared, un piso, etc.) con sus datos."""
     ubicacion: Optional[str] = None
     tipo_superficie: Optional[str] = None
     materiales: List[str] = []
     colores: List[str] = []
     dimensiones: Dimensiones = Field(default_factory=Dimensiones)
     dimensiones_crudo: List[str] = []
+
+class ExtractionResult(BaseModel):
+    """Resultado de un audio = un presupuesto con 1 o varias superficies (items)."""
+    es_multiple: bool = False
+    items: List[ExtractionItem] = []
 
 class ExtractionRecord(BaseModel):
     id: str
