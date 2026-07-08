@@ -1,4 +1,5 @@
 import re
+import unicodedata
 from typing import List, Tuple
 
 from src.feature.extraction.domain.entities import Dimensiones
@@ -16,17 +17,22 @@ NUM = (r"(\d+(?:[.,]\d+)?|un[oa]?|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|"
 # Un "N por M" es tamaño de PIEZA si cerca hay un sustantivo de pieza (loseta,
 # azulejo...) y NO uno de superficie. "la loseta mide 1x1" = pieza; pero
 # "la pared mide 2x2" = área de la superficie, no pieza.
+# Sin acentos: el texto (t) se normaliza con _strip_accents antes de compararlo.
 PIEZA_NOUNS = ("loseta", "losetas", "azulejo", "azulejos", "baldosa", "baldosas",
                "pieza", "piezas", "mosaico", "mosaicos", "tableta", "porcelanato",
-               "cerámico", "ceramico", "talavera")
+               "ceramico", "talavera")
 SURFACE_NOUNS = ("pared", "paredes", "muro", "muros", "piso", "pisos", "techo",
-                 "suelo", "fachada", "plafón", "plafon")
+                 "suelo", "fachada", "plafon")
 
 RE_AREA = re.compile(NUM + r"\s*(?:metros?|mts?|m)\s*(?:cuadrados?|²|2\b)")
 RE_LADO = re.compile(NUM + r"\s*(?:metros?|mts?|m)?\s*de\s*(largo|ancho|alto)")
 # Tolera unidad ("metros") y coma/punto entre el número y el conector.
 # Ej: "2 metros, por 2 metros", "2 m x 2 m", "4 metros por 5 metros".
 RE_PAR = re.compile(NUM + r"\s*(?:metros?|mts?|m)?\s*[,.]?\s*(?:x|×|por|\*)\s*" + NUM)
+
+
+def _strip_accents(s: str) -> str:
+    return "".join(c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn")
 
 
 def _num(s: str) -> float:
@@ -44,7 +50,7 @@ class RegexDimensionParser(IDimensionExtractor):
     """
 
     def extract(self, text: str) -> Tuple[Dimensiones, List[str]]:
-        t = " " + text.lower() + " "
+        t = " " + _strip_accents(text.lower()) + " "
         dim = Dimensiones()
         crudo: List[str] = []
 
