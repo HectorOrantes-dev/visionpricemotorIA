@@ -13,6 +13,7 @@ from src.feature.extraction.infrastructure.adapters.r2_storage_adapter import R2
 from src.feature.extraction.infrastructure.adapters.callback_adapter import HttpCallbackAdapter
 from src.feature.extraction.infrastructure.adapters.text_corrector_adapter import RapidFuzzCorrector
 from src.feature.extraction.infrastructure.adapters.dimension_parser_adapter import RegexDimensionParser
+from src.feature.extraction.infrastructure.adapters.category_classifier_adapter import KeywordCategoryClassifier
 from src.feature.extraction.infrastructure.repositories.postgres_extraction_repository import (
     PostgresExtractionRepository,
     Base as ExtractionBase
@@ -65,6 +66,7 @@ async def lifespan(app: FastAPI):
     beto_adapter = BetoAdapter(model_path=settings.BETO_MODEL_PATH)
     corrector = RapidFuzzCorrector(vocab_path=settings.VOCAB_PATH)
     dimension_parser = RegexDimensionParser()
+    category_classifier = KeywordCategoryClassifier()
 
     # 5. Inicializar Repositorio de PostgreSQL
     repository = PostgresExtractionRepository(db_url=settings.DATABASE_URL)
@@ -78,6 +80,7 @@ async def lifespan(app: FastAPI):
         notifier=notifier,
         corrector=corrector,
         dimension_extractor=dimension_parser,
+        category_classifier=category_classifier,
         voice_model_label=f"whisper-{settings.WHISPER_MODEL}",
     )
 

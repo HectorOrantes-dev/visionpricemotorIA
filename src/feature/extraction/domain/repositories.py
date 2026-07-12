@@ -28,6 +28,15 @@ class IDimensionExtractor(ABC):
         """Extrae medidas normalizadas del texto. Devuelve (Dimensiones, crudo)."""
         pass
 
+class ICategoryClassifier(ABC):
+    @abstractmethod
+    def classify(self, tipo_superficie: Optional[str], materiales: List[str], texto: str = "") -> Optional[str]:
+        """Deriva la categoría de producto (piso, azulejo, zoclo, pintura...)
+        a partir de la superficie y los materiales detectados. `texto` es el
+        segmento crudo, usado como respaldo cuando no se detectó material."""
+        pass
+
+
 class IExtractionRepository(ABC):
     @abstractmethod
     def save(self, record: ExtractionRecord) -> ExtractionRecord:

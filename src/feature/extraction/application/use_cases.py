@@ -10,6 +10,7 @@ from src.feature.extraction.domain.repositories import (
     IMlCallbackNotifier,
     ITextCorrector,
     IDimensionExtractor,
+    ICategoryClassifier,
 )
 
 # Marcadores que indican el inicio de otra superficie dentro del mismo audio
@@ -34,6 +35,7 @@ class ProcessAudioUseCase:
         notifier: IMlCallbackNotifier,
         corrector: ITextCorrector,
         dimension_extractor: IDimensionExtractor,
+        category_classifier: ICategoryClassifier,
         voice_model_label: str = "whisper-small",
         extraction_model_version: str = "beto-visionprice-1.1",
     ):
@@ -44,6 +46,7 @@ class ProcessAudioUseCase:
         self.notifier = notifier
         self.corrector = corrector
         self.dimension_extractor = dimension_extractor
+        self.category_classifier = category_classifier
         self.voice_model_label = voice_model_label
         self.extraction_model_version = extraction_model_version
 
@@ -144,6 +147,7 @@ class ProcessAudioUseCase:
                     base.tipo_superficie = superficie_ctx
                 if not base.colores:
                     base.colores = list(colores_ctx)
+                base.categoria = self.category_classifier.classify(base.tipo_superficie, base.materiales, seg)
                 items.append(base)
 
         # Sin medidas detectadas: un solo item con todo el texto.
@@ -152,6 +156,7 @@ class ProcessAudioUseCase:
             dimensiones, dim_crudo = self.dimension_extractor.extract(texto)
             base.dimensiones = dimensiones
             base.dimensiones_crudo = dim_crudo
+            base.categoria = self.category_classifier.classify(base.tipo_superficie, base.materiales, texto)
             items = [base]
 
         return ExtractionResult(es_multiple=len(items) > 1, items=items)

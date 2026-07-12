@@ -21,6 +21,9 @@ class ExtractionItem(BaseModel):
     colores: List[str] = []
     dimensiones: Dimensiones = Field(default_factory=Dimensiones)
     dimensiones_crudo: List[str] = []
+    # Categoría del material principal (piso, azulejo, zoclo, pintura...).
+    # El back-end la usa para filtrar proveedores por ?categoria=.
+    categoria: Optional[str] = None
 
 class ExtractionResult(BaseModel):
     """Resultado de un audio = un presupuesto con 1 o varias superficies (items)."""
