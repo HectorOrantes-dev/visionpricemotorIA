@@ -13,6 +13,7 @@ ERRORES_ASR = {
     "faredes": "paredes",
     "fared": "pared",
     "farede": "pared",
+    "preta": "pared",
     "vaño": "baño",
     "vater": "baño",
 }
@@ -78,7 +79,8 @@ class RapidFuzzCorrector(ITextCorrector):
     def correct(self, text: str) -> str:
         # Pre-correcciones de frases completas (errores de ASR multi-palabra o de contexto)
         text = re.sub(r"\b(mi|me)\s+de\b", "mide", text, flags=re.IGNORECASE)
-        text = re.sub(r"\b(en\s*)?frente\s+de\s+m[ií]\b", "enfrente de mí", text, flags=re.IGNORECASE)
+        text = re.sub(r"\bme\s+he\s+dedos\b", "mide dos", text, flags=re.IGNORECASE)
+        text = re.sub(r"\b(en\s*)?frente\s+(de|a)\s+m[ií]\b", "enfrente de mí", text, flags=re.IGNORECASE)
 
         if not self.targets:
             return text  # passthrough si no hay vocabulario
