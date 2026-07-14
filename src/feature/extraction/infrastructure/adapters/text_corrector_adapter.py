@@ -10,17 +10,26 @@ from src.feature.extraction.domain.repositories import ITextCorrector
 # Errores de transcripción conocidos que el fuzzy no alcanza (ej. confusión p/f
 # de Whisper, que no es un patrón fonético estándar del español).
 ERRORES_ASR = {
-    "faredes": "paredes",
-    "fared": "pared",
-    "farede": "pared",
-    "preta": "pared",
-    "apareta": "pared",
-    "parraszam": "pared",
-    "pitorra": "pintura",
-    "vaño": "baño",
-    "vater": "baño",
-    "vive": "mide",
-    "caberle": "cambiarle",
+    # Pared / Paredes
+    "faredes": "paredes", "fared": "pared", "farede": "pared", "preta": "pared", 
+    "apareta": "pared", "parraszam": "pared", "pare": "pared", "paret": "pared", 
+    "padres": "pared", "padre": "pared", "pares": "pared", "pader": "pared", 
+    "paderes": "paredes",
+    # Baño
+    "vaño": "baño", "vater": "baño", "bano": "baño", "vano": "baño", "daño": "baño",
+    # Pintura
+    "pitorra": "pintura", "pintora": "pintura", "cintura": "pintura", "tintura": "pintura",
+    # Medir
+    "vive": "mide", "pide": "mide", "nide": "mide", "mile": "mide", "vide": "mide",
+    # Cambiar
+    "caberle": "cambiarle", "camero": "cambiarle", "camiarle": "cambiarle", 
+    "canviarle": "cambiarle", "camiar": "cambiar", "canviar": "cambiar", "gambiar": "cambiar",
+    # Piso / Techo
+    "pizo": "piso", "pillo": "piso", "pisto": "piso", "tacho": "techo", 
+    "pecho": "techo", "trecho": "techo",
+    # Materiales extra
+    "asulejo": "azulejo", "sulejo": "azulejo", "loceta": "loseta", 
+    "roseta": "loseta", "receta": "loseta",
 }
 
 
