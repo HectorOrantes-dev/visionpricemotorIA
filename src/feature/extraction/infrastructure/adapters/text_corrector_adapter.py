@@ -90,6 +90,7 @@ class RapidFuzzCorrector(ITextCorrector):
         text = re.sub(r"\bviene\s+el\s+esbordo\b", "mide dos por dos", text, flags=re.IGNORECASE)
         text = re.sub(r"\b(en\s*)?frente\s+(de|a)\s+(m[ií]|un\s+ínimo)\b", "enfrente de mí", text, flags=re.IGNORECASE)
         text = re.sub(r"\ben\s+la\s+gente\b", "enfrente", text, flags=re.IGNORECASE)
+        text = re.sub(r"\bunas\s+pared\b", "una pared", text, flags=re.IGNORECASE)
 
         if not self.targets:
             return text  # passthrough si no hay vocabulario
