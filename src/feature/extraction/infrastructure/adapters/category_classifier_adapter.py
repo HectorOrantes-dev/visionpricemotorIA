@@ -42,6 +42,7 @@ SURFACE_TECHO = {"techo", "techos", "plafon"}
 VERBOS_ACCION = (
     (re.compile(r"\bpintar\b"), "pintura"),
     (re.compile(r"\bimpermeabilizar\b"), "impermeabilizante"),
+    (re.compile(r"\bcolor\b"), "pintura"),
 )
 
 
@@ -69,6 +70,11 @@ class KeywordCategoryClassifier(ICategoryClassifier):
         for m in materiales_norm:
             if m in CATEGORIA_DIRECTA:
                 return CATEGORIA_DIRECTA[m]
+            
+            # Buscar si el material contiene alguna de las claves de CATEGORIA_DIRECTA (ej. "cambio de pintura" -> "pintura")
+            for k, cat in CATEGORIA_DIRECTA.items():
+                if k in m:
+                    return cat
 
         ts = _norm(tipo_superficie)
 

@@ -76,6 +76,10 @@ class RapidFuzzCorrector(ITextCorrector):
                   f"El corrector quedará inactivo (passthrough).")
 
     def correct(self, text: str) -> str:
+        # Pre-correcciones de frases completas (errores de ASR multi-palabra o de contexto)
+        text = re.sub(r"\b(mi|me)\s+de\b", "mide", text, flags=re.IGNORECASE)
+        text = re.sub(r"\b(en\s*)?frente\s+de\s+m[ií]\b", "enfrente de mí", text, flags=re.IGNORECASE)
+
         if not self.targets:
             return text  # passthrough si no hay vocabulario
 
