@@ -15,6 +15,7 @@ ERRORES_ASR = {
     "farede": "pared",
     "preta": "pared",
     "apareta": "pared",
+    "parraszam": "pared",
     "vaño": "baño",
     "vater": "baño",
     "vive": "mide",
@@ -83,6 +84,8 @@ class RapidFuzzCorrector(ITextCorrector):
         # Pre-correcciones de frases completas (errores de ASR multi-palabra o de contexto)
         text = re.sub(r"\b(mi|me)\s+de\b", "mide", text, flags=re.IGNORECASE)
         text = re.sub(r"\bme\s+he\s+dedos\b", "mide dos", text, flags=re.IGNORECASE)
+        text = re.sub(r"\bha\s+hile\b", "mide", text, flags=re.IGNORECASE)
+        text = re.sub(r"\ben\s+medio\s+de\s+los\s+portos\b", "que mide dos por dos", text, flags=re.IGNORECASE)
         text = re.sub(r"\b(en\s*)?frente\s+(de|a)\s+m[ií]\b", "enfrente de mí", text, flags=re.IGNORECASE)
 
         if not self.targets:
