@@ -148,6 +148,8 @@ class ProcessAudioUseCase:
                 if not base.colores:
                     base.colores = list(colores_ctx)
                 base.categoria = self.category_classifier.classify(base.tipo_superficie, base.materiales, seg)
+                if base.categoria and base.categoria not in base.materiales:
+                    base.materiales.append(base.categoria)
                 items.append(base)
 
         # Sin medidas detectadas: un solo item con todo el texto.
@@ -157,6 +159,8 @@ class ProcessAudioUseCase:
             base.dimensiones = dimensiones
             base.dimensiones_crudo = dim_crudo
             base.categoria = self.category_classifier.classify(base.tipo_superficie, base.materiales, texto)
+            if base.categoria and base.categoria not in base.materiales:
+                base.materiales.append(base.categoria)
             items = [base]
 
         return ExtractionResult(es_multiple=len(items) > 1, items=items)
