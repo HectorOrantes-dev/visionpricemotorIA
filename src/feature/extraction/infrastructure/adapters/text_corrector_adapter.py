@@ -16,6 +16,7 @@ ERRORES_ASR = {
     "preta": "pared",
     "apareta": "pared",
     "parraszam": "pared",
+    "pitorra": "pintura",
     "vaño": "baño",
     "vater": "baño",
     "vive": "mide",
@@ -86,7 +87,9 @@ class RapidFuzzCorrector(ITextCorrector):
         text = re.sub(r"\bme\s+he\s+dedos\b", "mide dos", text, flags=re.IGNORECASE)
         text = re.sub(r"\bha\s+hile\b", "mide", text, flags=re.IGNORECASE)
         text = re.sub(r"\ben\s+medio\s+de\s+los\s+portos\b", "que mide dos por dos", text, flags=re.IGNORECASE)
+        text = re.sub(r"\bviene\s+el\s+esbordo\b", "mide dos por dos", text, flags=re.IGNORECASE)
         text = re.sub(r"\b(en\s*)?frente\s+(de|a)\s+m[ií]\b", "enfrente de mí", text, flags=re.IGNORECASE)
+        text = re.sub(r"\ben\s+la\s+gente\b", "enfrente", text, flags=re.IGNORECASE)
 
         if not self.targets:
             return text  # passthrough si no hay vocabulario
