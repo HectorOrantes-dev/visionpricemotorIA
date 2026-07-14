@@ -14,8 +14,11 @@ ERRORES_ASR = {
     "fared": "pared",
     "farede": "pared",
     "preta": "pared",
+    "apareta": "pared",
     "vaño": "baño",
     "vater": "baño",
+    "vive": "mide",
+    "caberle": "cambiarle",
 }
 
 
