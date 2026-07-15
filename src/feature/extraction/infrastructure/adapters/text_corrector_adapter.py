@@ -14,7 +14,7 @@ ERRORES_ASR = {
     "faredes": "paredes", "fared": "pared", "farede": "pared", "preta": "pared", 
     "apareta": "pared", "parraszam": "pared", "pare": "pared", "paret": "pared", 
     "padres": "pared", "padre": "pared", "pares": "pared", "pader": "pared", 
-    "paderes": "paredes",
+    "paderes": "paredes", "pareja": "pared",
     # Baño
     "vaño": "baño", "vater": "baño", "bano": "baño", "vano": "baño", "daño": "baño",
     # Pintura
