@@ -131,6 +131,7 @@ class ProcessAudioUseCase:
 
         for seg in segmentos:
             base = self.extractor.extract_entities(seg)          # ExtractionItem
+            self._fix_surface(base, seg)
             dimensiones, dim_crudo = self.dimension_extractor.extract(seg)
 
             # Actualizar contexto heredable
@@ -155,6 +156,7 @@ class ProcessAudioUseCase:
         # Sin medidas detectadas: un solo item con todo el texto.
         if not items:
             base = self.extractor.extract_entities(texto)
+            self._fix_surface(base, texto)
             dimensiones, dim_crudo = self.dimension_extractor.extract(texto)
             base.dimensiones = dimensiones
             base.dimensiones_crudo = dim_crudo
@@ -164,6 +166,19 @@ class ProcessAudioUseCase:
             items = [base]
 
         return ExtractionResult(es_multiple=len(items) > 1, items=items)
+
+    @staticmethod
+    def _fix_surface(base: ExtractionItem, text: str) -> None:
+        """Respaldo para evitar que BETO asigne palabras como 'color' a la superficie."""
+        valid_surfaces = ["pared", "muro", "piso", "suelo", "techo", "plafon", "fachada", "losa", "barda", "baño", "cuarto", "recamara", "sala", "cocina", "azotea"]
+        if base.tipo_superficie:
+            if any(s in base.tipo_superficie.lower() for s in valid_surfaces):
+                return
+        text_lower = text.lower()
+        for s in valid_surfaces:
+            if re.search(r"\b" + s + r"\b", text_lower):
+                base.tipo_superficie = s
+                break
 
     @staticmethod
     def _segmentar(texto: str) -> list:
