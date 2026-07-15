@@ -24,6 +24,7 @@ ERRORES_ASR = {
     # Cambiar
     "caberle": "cambiarle", "caberla": "cambiarla", "camero": "cambiarle", "camiarle": "cambiarle", 
     "canviarle": "cambiarle", "camiar": "cambiar", "canviar": "cambiar", "gambiar": "cambiar",
+    "camberle": "cambiarle", "camberla": "cambiarla", "camber": "cambiar",
     # Piso / Techo
     "pizo": "piso", "pillo": "piso", "pisto": "piso", "tacho": "techo", 
     "pecho": "techo", "trecho": "techo",
