@@ -22,7 +22,7 @@ ERRORES_ASR = {
     # Medir
     "vive": "mide", "pide": "mide", "nide": "mide", "mile": "mide", "vide": "mide",
     # Cambiar
-    "caberle": "cambiarle", "camero": "cambiarle", "camiarle": "cambiarle", 
+    "caberle": "cambiarle", "caberla": "cambiarla", "camero": "cambiarle", "camiarle": "cambiarle", 
     "canviarle": "cambiarle", "camiar": "cambiar", "canviar": "cambiar", "gambiar": "cambiar",
     # Piso / Techo
     "pizo": "piso", "pillo": "piso", "pisto": "piso", "tacho": "techo", 
