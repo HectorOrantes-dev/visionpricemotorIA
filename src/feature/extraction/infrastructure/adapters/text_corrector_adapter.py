@@ -25,9 +25,9 @@ ERRORES_ASR = {
     "caberle": "cambiarle", "caberla": "cambiarla", "camero": "cambiarle", "camiarle": "cambiarle", 
     "canviarle": "cambiarle", "camiar": "cambiar", "canviar": "cambiar", "gambiar": "cambiar",
     "camberle": "cambiarle", "camberla": "cambiarla", "camber": "cambiar",
-    # Piso / Techo
+    # Piso / Techo / Pieza
     "pizo": "piso", "pillo": "piso", "pisto": "piso", "tacho": "techo", 
-    "pecho": "techo", "trecho": "techo",
+    "pecho": "techo", "trecho": "techo", "pizza": "pieza", "piesa": "pieza",
     # Materiales extra
     "asulejo": "azulejo", "sulejo": "azulejo", "loceta": "loseta", 
     "roseta": "loseta", "receta": "loseta",
@@ -102,6 +102,7 @@ class RapidFuzzCorrector(ITextCorrector):
         text = re.sub(r"\ben\s+la\s+gente\b", "enfrente", text, flags=re.IGNORECASE)
         text = re.sub(r"\bunas\s+pared\b", "una pared", text, flags=re.IGNORECASE)
         text = re.sub(r"\bt[eé]mono\s+a\b", "tengo una", text, flags=re.IGNORECASE)
+        text = re.sub(r"\bun\s+pizza\b", "una pieza", text, flags=re.IGNORECASE)
 
         if not self.targets:
             return text  # passthrough si no hay vocabulario
