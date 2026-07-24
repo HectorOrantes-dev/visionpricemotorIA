@@ -14,7 +14,8 @@ ERRORES_ASR = {
     "faredes": "paredes", "fared": "pared", "farede": "pared", "preta": "pared", 
     "apareta": "pared", "parraszam": "pared", "pare": "pared", "paret": "pared", 
     "padres": "pared", "padre": "pared", "pares": "pared", "pader": "pared", 
-    "paderes": "paredes", "pareja": "pared",
+    "paderes": "paredes", "pareja": "pared", "aparedo": "pared", "apared": "pared", 
+    "parecos": "pared", "pareco": "pared",
     # Baño
     "vaño": "baño", "vater": "baño", "bano": "baño", "vano": "baño", "daño": "baño",
     # Pintura
@@ -103,6 +104,15 @@ class RapidFuzzCorrector(ITextCorrector):
         text = re.sub(r"\bunas\s+pared\b", "una pared", text, flags=re.IGNORECASE)
         text = re.sub(r"\bt[eé]mono\s+a\b", "tengo una", text, flags=re.IGNORECASE)
         text = re.sub(r"\bun\s+pizza\b", "una pieza", text, flags=re.IGNORECASE)
+        text = re.sub(r"\bde\s+espor\b", "de 2 por 2", text, flags=re.IGNORECASE)
+        text = re.sub(r"\ba\s+(?=\d+\s*por\s*\d+)", "de ", text, flags=re.IGNORECASE)
+        text = re.sub(r"\ba\s+mide\b", "mide", text, flags=re.IGNORECASE)
+        text = re.sub(r"\bun\s+aparedo\s+por\s+2\b", "una pared de 2 por 2", text, flags=re.IGNORECASE)
+        text = re.sub(r"\bcomo\s+cycle\b", "con mosaico", text, flags=re.IGNORECASE)
+        text = re.sub(r"\beste\s+1\s+piso\b", "este piso", text, flags=re.IGNORECASE)
+        text = re.sub(r"\bunos\s+parecos\b", "una pared", text, flags=re.IGNORECASE)
+        text = re.sub(r"\bel\s+(?=\d+x\d+)", "de ", text, flags=re.IGNORECASE)
+        text = re.sub(r"\bTen\s+que\s+irnos\b", "Tengo", text, flags=re.IGNORECASE)
 
         if not self.targets:
             return text  # passthrough si no hay vocabulario
